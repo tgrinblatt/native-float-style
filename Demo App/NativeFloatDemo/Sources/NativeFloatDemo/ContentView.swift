@@ -68,64 +68,71 @@ struct ContentView: View {
             DemoSidebarView(selection: $selectedShowcase)
                 .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
         } detail: {
-            Group {
-                switch selectedShowcase {
-                case .overview: OverviewShowcase()
-                case .hoverToggles: HoverTogglesShowcase(settings: settings)
-                case .sidebar: SidebarShowcase()
-                case .typography: TypographyShowcase()
-                case .colors: ColorsShowcase()
-                case .materials: MaterialsShowcase()
-                case .components: ComponentsShowcase()
-                case .animation: AnimationShowcase()
-                case .layout: LayoutShowcase()
-                case .windowManagement: WindowManagementShowcase(settings: settings)
-                case .nativePatterns: NativePatternsShowcase()
-                case .settings: SettingsShowcase(settings: settings)
-                case .none: OverviewShowcase()
-                }
-            }
-        }
-        .navigationSplitViewStyle(.balanced)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: { toggleAppearance() }) {
-                    Image(systemName: colorScheme == .dark ? "sun.max" : "moon")
-                }
-                .help("Toggle appearance (\u{21E7}\u{2318}D)")
-                .keyboardShortcut("d", modifiers: [.shift, .command])
-            }
+            detailContent
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Spacer()
+                    }
 
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: { showOpacityPopover = true }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: opacityIcon)
-                        Text("\(Int(settings.windowOpacity * 100))%")
-                            .font(.caption)
-                            .monospacedDigit()
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(action: { toggleAppearance() }) {
+                            Image(systemName: colorScheme == .dark ? "sun.max" : "moon")
+                        }
+                        .help("Toggle appearance (\u{21E7}\u{2318}D)")
+                        .keyboardShortcut("d", modifiers: [.shift, .command])
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(action: { showOpacityPopover = true }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: opacityIcon)
+                                Text("\(Int(settings.windowOpacity * 100))%")
+                                    .font(.caption)
+                                    .monospacedDigit()
+                            }
+                        }
+                        .popover(isPresented: $showOpacityPopover, arrowEdge: .bottom) {
+                            OpacityPopoverContent(opacity: $settings.windowOpacity)
+                        }
+                        .help("Window opacity")
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
+                        Toggle(isOn: Bindable(settings).windowPinned) {
+                            Image(systemName: "pin")
+                        }
+                        .toggleStyle(.button)
+                        .help("Pin window (\u{2318}P)")
+                        .keyboardShortcut("p", modifiers: .command)
                     }
                 }
-                .popover(isPresented: $showOpacityPopover, arrowEdge: .bottom) {
-                    OpacityPopoverContent(opacity: $settings.windowOpacity)
-                }
-                .help("Window opacity")
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Toggle(isOn: Bindable(settings).windowPinned) {
-                    Image(systemName: "pin")
-                }
-                .toggleStyle(.button)
-                .help("Pin window (\u{2318}P)")
-                .keyboardShortcut("p", modifiers: .command)
-            }
         }
+        .navigationSplitViewStyle(.balanced)
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .background(WindowAccessor(
             isPinned: settings.windowPinned,
             opacity: settings.windowOpacity,
             showOnAllDesktops: settings.showOnAllDesktops
         ))
+    }
+
+    @ViewBuilder
+    private var detailContent: some View {
+        switch selectedShowcase {
+        case .overview: OverviewShowcase()
+        case .hoverToggles: HoverTogglesShowcase(settings: settings)
+        case .sidebar: SidebarShowcase()
+        case .typography: TypographyShowcase()
+        case .colors: ColorsShowcase()
+        case .materials: MaterialsShowcase()
+        case .components: ComponentsShowcase()
+        case .animation: AnimationShowcase()
+        case .layout: LayoutShowcase()
+        case .windowManagement: WindowManagementShowcase(settings: settings)
+        case .nativePatterns: NativePatternsShowcase()
+        case .settings: SettingsShowcase(settings: settings)
+        case .none: OverviewShowcase()
+        }
     }
 
     private var opacityIcon: String {

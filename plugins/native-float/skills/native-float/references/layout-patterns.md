@@ -30,11 +30,12 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
         } detail: {
             CanvasView()
+                .toolbar {
+                    ToolbarItem(placement: .principal) { Spacer() }
+                    // HoverToggles (.primaryAction) here
+                }
         }
         .navigationSplitViewStyle(.balanced)
-        .toolbar {
-            // HoverToggles here
-        }
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .background(WindowAccessor(
             isPinned: settings.windowPinned,
@@ -50,10 +51,32 @@ struct ContentView: View {
 | Slot | Placement | Content |
 |------|-----------|---------|
 | Sidebar toggle | `.navigation` | Auto-inserted by NavigationSplitView |
+| Page title | Auto | NavigationSplitView shows selected item's title |
+| **Spacer** | **`.principal`** | **Pushes .primaryAction items to far trailing edge** |
 | HoverToggles | `.primaryAction` (×3 separate items) | Appearance, Opacity, Pin |
 | Action menu | `.primaryAction` | Clear/delete (if applicable) |
 
+**Critical:** The `.toolbar { }` modifier with HoverToggles goes on the **detail content**, NOT on the NavigationSplitView itself. Placing it on NavigationSplitView clusters `.primaryAction` items near the sidebar divider instead of at the far trailing edge.
+
+```swift
+NavigationSplitView(columnVisibility: $columnVisibility) {
+    SidebarView()
+} detail: {
+    DetailContent()
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Spacer()
+            }
+            // HoverToggles (.primaryAction) here
+        }
+}
+.toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+```
+
 Rules:
+- Toolbar goes on the detail view content, not on NavigationSplitView
+- Always include the `.principal` Spacer before HoverToggles
+- `.toolbarBackgroundVisibility(.hidden)` stays on the NavigationSplitView
 - No custom Capsule backgrounds — Tahoe handles glass wrapping
 - Each HoverToggle is its own ToolbarItem
 - Use `.help()` on every toolbar button

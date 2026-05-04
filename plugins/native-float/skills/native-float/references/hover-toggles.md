@@ -148,40 +148,49 @@ The appearance toggle modifies the color scheme override:
 
 ## Complete Toolbar Example
 
+**Critical:** The `.toolbar` modifier goes on the **detail content view**, NOT on the NavigationSplitView. This ensures `.primaryAction` items land at the far trailing edge of the window.
+
 ```swift
-.toolbar {
-    // Appearance toggle
-    ToolbarItem(placement: .primaryAction) {
-        Button(action: { toggleAppearance() }) {
-            Image(systemName: colorScheme == .dark ? "sun.max" : "moon")
+// Inside NavigationSplitView's detail closure:
+DetailContent()
+    .toolbar {
+        // REQUIRED: Spacer pushes .primaryAction items to far trailing edge.
+        ToolbarItem(placement: .principal) {
+            Spacer()
         }
-        .help("Toggle appearance (⇧⌘D)")
-        .keyboardShortcut("d", modifiers: [.shift, .command])
-    }
 
-    // Opacity control
-    ToolbarItem(placement: .primaryAction) {
-        Button(action: { showOpacityPopover = true }) {
-            HStack(spacing: 4) {
-                Image(systemName: opacityIcon(for: settings.windowOpacity))
-                Text("\(Int(settings.windowOpacity * 100))%")
-                    .font(.caption).monospacedDigit()
+        // Appearance toggle
+        ToolbarItem(placement: .primaryAction) {
+            Button(action: { toggleAppearance() }) {
+                Image(systemName: colorScheme == .dark ? "sun.max" : "moon")
             }
+            .help("Toggle appearance (⇧⌘D)")
+            .keyboardShortcut("d", modifiers: [.shift, .command])
         }
-        .popover(isPresented: $showOpacityPopover, arrowEdge: .bottom) {
-            OpacityPopoverContent(opacity: $settings.windowOpacity)
-        }
-        .help("Window opacity")
-    }
 
-    // Pin toggle
-    ToolbarItem(placement: .primaryAction) {
-        Toggle(isOn: $settings.windowPinned) {
-            Image(systemName: "pin")
+        // Opacity control
+        ToolbarItem(placement: .primaryAction) {
+            Button(action: { showOpacityPopover = true }) {
+                HStack(spacing: 4) {
+                    Image(systemName: opacityIcon(for: settings.windowOpacity))
+                    Text("\(Int(settings.windowOpacity * 100))%")
+                        .font(.caption).monospacedDigit()
+                }
+            }
+            .popover(isPresented: $showOpacityPopover, arrowEdge: .bottom) {
+                OpacityPopoverContent(opacity: $settings.windowOpacity)
+            }
+            .help("Window opacity")
         }
-        .toggleStyle(.button)
-        .help("Pin window (⌘P)")
-        .keyboardShortcut("p", modifiers: .command)
+
+        // Pin toggle
+        ToolbarItem(placement: .primaryAction) {
+            Toggle(isOn: $settings.windowPinned) {
+                Image(systemName: "pin")
+            }
+            .toggleStyle(.button)
+            .help("Pin window (⌘P)")
+            .keyboardShortcut("p", modifiers: .command)
+        }
     }
-}
 ```
