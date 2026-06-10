@@ -50,12 +50,16 @@ struct ContentView: View {
 | Slot | Placement | Content |
 |------|-----------|---------|
 | Sidebar toggle | `.navigation` | Auto-inserted by NavigationSplitView |
-| HoverToggles | `.primaryAction` (×3 separate items) | Appearance, Opacity, Pin |
+| Title / nav content | `.navigation` | Locked (`.customizationBehavior(.disabled)`) if the toolbar is customizable |
+| Principal content | `.principal` | Optional, app-specific (e.g. a pager); good candidate for user customization |
+| HoverToggles cluster | `.primaryAction` | ONE item, ONE HStack (`HoverTogglesCluster`) — locked, unsplittable |
 | Action menu | `.primaryAction` | Clear/delete (if applicable) |
 
 Rules:
-- No custom Capsule backgrounds — Tahoe handles glass wrapping
-- Each HoverToggle is its own ToolbarItem
+- No custom Capsule backgrounds — Tahoe handles glass wrapping (exception: the cluster's collapsed-state chip)
+- The HoverToggles are ONE ToolbarItem containing one HStack — never ×N separate items (v2; NSToolbar tears those apart)
+- In a customizable `.toolbar(id:)` window, EVERY item must be customizable-form — one plain `.toolbar {}` item anywhere disables Customize Toolbar… window-wide; lock fixed items with `.customizationBehavior(.disabled)`
+- Toolbar item ids are frozen API — the autosaved arrangement keys on them
 - Use `.help()` on every toolbar button
 
 ## Canvas Grid

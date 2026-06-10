@@ -35,11 +35,13 @@ open NativeFloatDemo.app
 
 ## Core Design Marks
 
-### HoverToggles Cluster
-Three separate `ToolbarItem(.primaryAction)` items that Tahoe groups visually:
-- **Appearance** — light/dark binary toggle (icon reflects state)
-- **Opacity** — button + popover with slider and 6 presets
-- **Pin** — `Toggle(.button)` for native blue accent when active
+### HoverToggles Cluster (Standard v2)
+ONE cohesive, collapsible cluster — a single `ToolbarItem(.primaryAction)` containing one HStack (never separate items; macOS 26's toolbar layout tears those apart). Uniform 30×30 borderless controls, 4pt spacing, 30pt accent circles (`HoverToggleStyle`):
+- **Appearance** — light/dark binary toggle (filled icon reflects current state)
+- **Opacity** — icon-only button + popover with slider and 6 presets
+- **Magnet** — follow the user across desktops (template-`NSImage` glyph)
+- **Pin** — float above other windows (30pt accent circle when active)
+- **Collapse** — left chevron shrinks the cluster to a single symbol; state persists
 
 ### Frosted Sidebar
 - `NavigationSplitView(.balanced)` with `.ultraThinMaterial`

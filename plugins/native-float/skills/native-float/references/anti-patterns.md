@@ -21,14 +21,16 @@ Things that violate Native Float's identity and principles.
 - **Never** apply `.glassEffect()` manually to views — let Tahoe handle toolbar glass
 - **Never** use `GlassEffectContainer` — that's tyler-app-style
 - **Never** use `.buttonStyle(.glass)` — let the toolbar item placement handle it
-- **Never** add `Capsule()` backgrounds under toolbar items — doubles up with Tahoe glass
+- **Never** add `Capsule()` backgrounds under toolbar items — doubles up with Tahoe glass (one exception: the HoverToggles collapsed-state chip, a deliberate `secondary.opacity(0.12)` capsule INSIDE the glass)
 - **Never** make the sidebar opaque — `.ultraThinMaterial` is load-bearing for the identity
 
 ## Toolbar
 
-- **Never** combine HoverToggle items into one `ToolbarItem`
-- **Never** wrap HoverToggles in a `ToolbarItemGroup`
-- **Never** put HoverToggles in an `HStack` inside a single item
+- **Never** split the HoverToggles across separate `ToolbarItem`s, a `ToolbarItemGroup`, or a `ControlGroup` — Standard v2: the cluster is ONE item containing ONE HStack. macOS 26's NSToolbar layout distributes grouped-by-convention items apart and tears the cluster to pieces (the v1 "three separate items" rule is dead).
+- **Never** put a default-styled button inside the HoverToggles cluster — the system inflates it to 36×36 and breaks the uniform 30pt footprints / 34pt rhythm
+- **Never** use full-bleed `.toggleStyle(.button)` for cluster on-states — use `HoverToggleStyle` (30pt accent circle, 3pt gap from the glass)
+- **Never** use a custom `Shape` view as a toolbar item label — it splits out of the shared glass capsule; render custom glyphs as template `NSImage`s
+- **Never** mix plain `.toolbar {}` items with a customizable `.toolbar(id:)` block — one plain fixed item anywhere in the window disables Customize Toolbar… window-wide; locked items use `.customizationBehavior(.disabled)`
 - **Never** use `.windowToolbarStyle(.unified)` — re-enables opaque title bar background
 - **Never** add `.toolbarBackground(.visible)` — fights the hidden title bar
 - **Never** use `.toolbar(.hidden)` on the window toolbar
@@ -70,9 +72,9 @@ Things that violate Native Float's identity and principles.
 | `.custom("MyFont", size: 14)` | `.font(.body)` |
 | `Color(hex: "FF5500")` | `.accentColor` or system color |
 | `.glassEffect()` on a button | `ToolbarItem(placement: .primaryAction)` |
-| `ToolbarItemGroup { HStack { ... } }` | Three separate `ToolbarItem(.primaryAction)` |
+| Separate `ToolbarItem`s / `ControlGroup` for the toggles | ONE `ToolbarItem` containing `HoverTogglesCluster` |
 | `@Bindable var settings` in WindowAccessor | `let isPinned: Bool, let opacity: Double` |
 | `withAnimation(.linear) { }` | `withAnimation(NativeFloatTokens.Motion.selection) { }` |
 | Manual sidebar with `.frame(width: 220)` | `NavigationSplitView` with `.navigationSplitViewColumnWidth()` |
-| Custom toggle with circles/icons | `Toggle(isOn:) { }.toggleStyle(.button)` |
+| Full-bleed `.toggleStyle(.button)` in the cluster | `HoverToggleStyle` (30pt circle, 3pt glass gap) |
 | `RoundedRectangle(cornerRadius: 8)` | `RoundedRectangle(cornerRadius: 8, style: .continuous)` |
