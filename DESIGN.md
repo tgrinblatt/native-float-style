@@ -249,59 +249,33 @@ The sidebar's `.ultraThinMaterial` extends into the title bar zone automatically
 
 ## 9. HoverToggles Cluster
 
-The HoverToggles ARE the second identity mark. Three separate toolbar items that Tahoe groups visually.
+The HoverToggles ARE the second identity mark. **Standard v2 (2026-06):** ONE cohesive, collapsible cluster in ONE toolbar item — appearance, opacity, magnet, pin. Full spec with complete code: `references/hover-toggles.md`.
 
 ### Critical Rule
-Each toggle is its own `ToolbarItem(.primaryAction)`. Never combine into one HStack or ToolbarItemGroup. Tahoe's auto-grouping only works correctly with separate items.
+The whole cluster is a single `ToolbarItem` whose content is one HStack (`HoverTogglesCluster`). Never separate items, never `ToolbarItemGroup`, never `ControlGroup` — macOS 26's NSToolbar layout distributes those apart and tears the cluster to pieces (proven in production, KeyDeck beta-v0.0.6). This reverses the v1 rule; the auto-grouping v1 relied on is not dependable once a window has a customizable toolbar.
 
-### Appearance Toggle
 ```swift
-ToolbarItem(placement: .primaryAction) {
-    Button(action: { toggleAppearance() }) {
-        Image(systemName: colorScheme == .dark ? "sun.max" : "moon")
-    }
-    .help("Toggle appearance (⇧⌘D)")
-    .keyboardShortcut("d", modifiers: [.shift, .command])
+ToolbarItem(id: "hoverToggles", placement: .primaryAction) {
+    HoverTogglesCluster(settings: settings)
 }
+.customizationBehavior(.disabled)   // locked: always present, pinned trailing
 ```
 
-### Opacity Control
-```swift
-ToolbarItem(placement: .primaryAction) {
-    Button(action: { showOpacityPopover = true }) {
-        HStack(spacing: 4) {
-            Image(systemName: opacityIcon)
-            Text("\(Int(settings.windowOpacity * 100))%")
-                .font(.caption)
-                .monospacedDigit()
-        }
-    }
-    .popover(isPresented: $showOpacityPopover, arrowEdge: .bottom) {
-        OpacityPopoverContent(opacity: $settings.windowOpacity)
-    }
-}
-```
+### Geometry (probe-measured)
+The toolbar gives default-styled buttons 36×36 — the glass capsule's interior. Inside the cluster:
+- Every control: borderless button, label framed to **30×30** (a default-styled button inflates to 36 and breaks the rhythm)
+- HStack spacing **4pt** → uniform **34pt** icon centers
+- On-state: `HoverToggleStyle` — a **30pt accent circle** (white glyph), 3pt breathing room from the glass. Never the full-bleed `.toggleStyle(.button)`.
+- Collapse chevron leads with 8pt padding; the last control carries 4pt trailing padding (the capsule hugs content)
 
-Opacity icon logic:
-- `>= 0.95`: `"circle.fill"`
-- `>= 0.60`: `"circle.lefthalf.filled"`
-- `< 0.60`: `"circle.dotted"`
+### The Four Controls
+- **Appearance** — filled icon reflects current state (`sun.max.fill` / `moon.fill`); ⇧⌘D
+- **Opacity** — icon-only button (`circle.fill` ≥0.95 / `circle.lefthalf.filled` ≥0.60 / `circle.dotted`); popover with labeled slider + presets `[0.25, 0.35, 0.50, 0.70, 0.85, 1.00]`
+- **Magnet** — follow-across-desktops (`collectionBehavior`); no SF Symbol exists — template `NSImage` glyph
+- **Pin** — `.floating` window level; ⌘P
 
-Opacity presets: `[0.25, 0.35, 0.50, 0.70, 0.85, 1.00]`
-
-### Pin Toggle
-```swift
-ToolbarItem(placement: .primaryAction) {
-    Toggle(isOn: $settings.windowPinned) {
-        Image(systemName: "pin")
-    }
-    .toggleStyle(.button)
-    .help("Pin window (⌘P)")
-    .keyboardShortcut("p", modifiers: .command)
-}
-```
-
-The `Toggle(.button)` style gives automatic blue accent tint when active — no manual color needed.
+### Collapsible
+A left-edge chevron collapses the cluster to one grey capsule (`Capsule().fill(.secondary.opacity(0.12))`, height 24) holding [expand chevron + the app's cluster symbol as a template `NSImage`]. State persists in UserDefaults; spring transitions only.
 
 ---
 
@@ -478,8 +452,8 @@ ScrollView {
 - Use `.custom()` fonts — system fonts only
 - Hardcode hex colors beyond the 2 approved custom values
 - Apply `.glassEffect()` manually — let Tahoe handle toolbar glass
-- Combine HoverToggle items into one ToolbarItem or HStack
-- Use `ToolbarItemGroup` for the HoverToggles cluster
+- Split the HoverToggles across separate ToolbarItems, a `ToolbarItemGroup`, or a `ControlGroup` — the cluster is ONE item, ONE HStack (v2; NSToolbar tears grouped-by-convention items apart)
+- Put a default-styled button inside the HoverToggles cluster — 36×36 inflation breaks the uniform 30pt footprints
 - Pass `@Bindable` or `@Observable` to WindowAccessor
 - Override `.listStyle` on the sidebar (it's `.sidebar` by default in NavigationSplitView)
 - Use `.linear` or `.easeIn/.easeOut` animations (springs only)

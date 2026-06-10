@@ -67,46 +67,38 @@ enum NativeFloatTokens {
 
 ## Identity Mark 1: HoverToggles Cluster
 
-Three SEPARATE `ToolbarItem(.primaryAction)` items. Tahoe auto-groups them visually.
+**Standard v2:** ONE `ToolbarItem` containing ONE HStack (`HoverTogglesCluster`) — appearance · opacity · magnet · pin, collapsible to a single symbol. NEVER separate items, `ToolbarItemGroup`, or `ControlGroup` (macOS 26's NSToolbar layout tears those apart). Full spec + complete code: `references/hover-toggles.md`.
 
-**Appearance Toggle** — binary light/dark switch:
 ```swift
-ToolbarItem(placement: .primaryAction) {
-    Button(action: { toggleAppearance() }) {
-        Image(systemName: colorScheme == .dark ? "sun.max" : "moon")
-    }
-    .help("Toggle appearance (⇧⌘D)")
-    .keyboardShortcut("d", modifiers: [.shift, .command])
+ToolbarItem(id: "hoverToggles", placement: .primaryAction) {
+    HoverTogglesCluster(settings: settings)   // one cohesive HStack
 }
+.customizationBehavior(.disabled)   // locked when the toolbar is customizable
 ```
 
-**Opacity Control** — button with popover:
+**Geometry (probe-measured):** the toolbar inflates default-styled buttons to 36×36 — the capsule interior. Every cluster control is a borderless button with a **30×30-framed label**, HStack spacing **4pt** → uniform **34pt** icon centers. Collapse chevron leads with 8pt padding; last control carries 4pt trailing padding.
+
+**On-states** use `HoverToggleStyle` — a 30pt accent circle (white glyph, 3pt gap from the glass), never full-bleed `.toggleStyle(.button)`:
 ```swift
-ToolbarItem(placement: .primaryAction) {
-    Button(action: { showOpacityPopover = true }) {
-        HStack(spacing: 4) {
-            Image(systemName: opacityIcon)
-            Text("\(Int(opacity * 100))%")
-                .font(.caption).monospacedDigit()
+struct HoverToggleStyle: ToggleStyle {
+    static let circleDiameter: CGFloat = 30
+    func makeBody(configuration: Configuration) -> some View {
+        Button { configuration.isOn.toggle() } label: {
+            configuration.label
+                .labelStyle(.iconOnly)
+                .foregroundStyle(configuration.isOn ? AnyShapeStyle(.white) : AnyShapeStyle(.secondary))
+                .frame(width: Self.circleDiameter, height: Self.circleDiameter)
+                .background(Circle().fill(configuration.isOn ? Color.accentColor : .clear))
+                .contentShape(Circle())
         }
-    }
-    .popover(isPresented: $showOpacityPopover, arrowEdge: .bottom) {
-        // Slider + 6 presets: 25, 35, 50, 70, 85, 100
+        .buttonStyle(.borderless)
     }
 }
 ```
 
-**Pin Toggle** — native blue accent when active:
-```swift
-ToolbarItem(placement: .primaryAction) {
-    Toggle(isOn: $settings.windowPinned) {
-        Image(systemName: "pin")
-    }
-    .toggleStyle(.button)
-    .help("Pin window (⌘P)")
-    .keyboardShortcut("p", modifiers: .command)
-}
-```
+**The four controls:** appearance (filled icon reflects CURRENT state, ⇧⌘D) · opacity (icon-only button + popover: slider, presets 25/35/50/70/85/100) · magnet (follow across desktops via `collectionBehavior`; glyph is a template `NSImage` — no SF Symbol exists) · pin (`.floating` level, ⌘P).
+
+**Collapsible:** a left chevron collapses the cluster to one grey capsule (`secondary.opacity(0.12)`, height 24) holding [expand chevron + app symbol]. State persists in UserDefaults; springs only.
 
 ## Identity Mark 2: Frosted Sidebar
 

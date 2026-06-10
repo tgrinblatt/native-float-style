@@ -1,7 +1,7 @@
 {
   "name": "native-float",
-  "description": "Native Float — a macOS Tahoe+ SwiftUI style that feels like a real Apple app. Uses system fonts, native materials, native toolbar behavior. Identity comes from the HoverToggle cluster (appearance/opacity/pin toolbar items) and the frosted sidebar treatment (ultraThinMaterial, capsule search, traffic lights on sidebar, gear + title inline).",
-  "version": "1.0.0",
+  "description": "Native Float — a macOS Tahoe+ SwiftUI style that feels like a real Apple app. Uses system fonts, native materials, native toolbar behavior. Identity comes from the HoverToggles cluster (one cohesive, collapsible toolbar item: appearance/opacity/magnet/pin with uniform 30pt geometry) and the frosted sidebar treatment (ultraThinMaterial, capsule search, traffic lights on sidebar, gear + title inline).",
+  "version": "1.1.0",
   "author": "Tyler",
   "license": "MIT",
   "keywords": [

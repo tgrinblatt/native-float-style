@@ -51,9 +51,9 @@ struct ContentView: View {
 | Slot | Placement | Content |
 |------|-----------|---------|
 | Sidebar toggle | `.navigation` | Auto-inserted by NavigationSplitView |
-| Page title | Auto | NavigationSplitView shows selected item's title |
-| **Spacer** | **`.principal`** | **Pushes .primaryAction items to far trailing edge** |
-| HoverToggles | `.primaryAction` (×3 separate items) | Appearance, Opacity, Pin |
+| Title / nav content | `.navigation` | Locked (`.customizationBehavior(.disabled)`) if the toolbar is customizable |
+| Principal content | `.principal` | A `Spacer()` in plain toolbars (pushes the cluster trailing); or app-specific content (e.g. a pager) — good candidate for user customization |
+| HoverToggles cluster | `.primaryAction` | ONE item, ONE HStack (`HoverTogglesCluster`) — locked, unsplittable |
 | Action menu | `.primaryAction` | Clear/delete (if applicable) |
 
 **Critical:** The `.toolbar { }` modifier with HoverToggles goes on the **detail content**, NOT on the NavigationSplitView itself. Placing it on NavigationSplitView clusters `.primaryAction` items near the sidebar divider instead of at the far trailing edge.
@@ -75,10 +75,11 @@ NavigationSplitView(columnVisibility: $columnVisibility) {
 
 Rules:
 - Toolbar goes on the detail view content, not on NavigationSplitView
-- Always include the `.principal` Spacer before HoverToggles
 - `.toolbarBackgroundVisibility(.hidden)` stays on the NavigationSplitView
-- No custom Capsule backgrounds — Tahoe handles glass wrapping
-- Each HoverToggle is its own ToolbarItem
+- No custom Capsule backgrounds — Tahoe handles glass wrapping (exception: the cluster's collapsed-state chip)
+- The HoverToggles are ONE ToolbarItem containing one HStack — never ×N separate items (v2; NSToolbar tears those apart)
+- In a customizable `.toolbar(id:)` window, EVERY item must be customizable-form — one plain `.toolbar {}` item anywhere disables Customize Toolbar… window-wide; lock fixed items with `.customizationBehavior(.disabled)`
+- Toolbar item ids are frozen API — the autosaved arrangement keys on them
 - Use `.help()` on every toolbar button
 
 ## Canvas Grid
