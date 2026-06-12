@@ -2,7 +2,7 @@
 
 A macOS Tahoe+ style reference for building Apple-native SwiftUI apps with the HoverToggle personality.
 
-System fonts. Native materials. Tahoe auto-glass toolbar. The identity comes from two core marks: the **HoverToggles cluster** (appearance/opacity/pin) and the **frosted sidebar treatment** (traffic lights on ultraThinMaterial, capsule search, inline title row with gear).
+System fonts. Native materials. Tahoe auto-glass toolbar. The identity comes from two core marks: the **HoverToggles cluster** (magnet/appearance/opacity/pin) and the **frosted sidebar treatment** (traffic lights on ultraThinMaterial, capsule search, inline title row with gear).
 
 ## How It Differs from tyler-app-style
 
@@ -35,13 +35,14 @@ open NativeFloatDemo.app
 
 ## Core Design Marks
 
-### HoverToggles Cluster (Standard v2)
-ONE cohesive, collapsible cluster — a single `ToolbarItem(.primaryAction)` containing one HStack (never separate items; macOS 26's toolbar layout tears those apart). Uniform 30×30 borderless controls, 4pt spacing, 30pt accent circles (`HoverToggleStyle`):
+### HoverToggles Cluster (Standard v3, 2026-06-12 — source of truth: the Kaddy app)
+ONE cohesive, collapsible cluster — a single `ToolbarItem(.primaryAction)` containing one HStack (never separate items; macOS 26's toolbar layout tears those apart). Uniform 30×30 rhythm cells, 4pt cluster spacing with a tight 2pt leading trio, `.tint`-filled on-states (`HoverToggleStyle`), all dials in `HoverToggleMetrics`:
+- **Magnet** — follow the user across desktops (template-`NSImage` glyph); active = a 24pt translucent yellow halo + accent glyph (the one deliberate accent-glyph exception)
 - **Appearance** — light/dark binary toggle (filled icon reflects current state)
 - **Opacity** — icon-only button + popover with slider and 6 presets
-- **Magnet** — follow the user across desktops (template-`NSImage` glyph)
-- **Pin** — float above other windows (30pt accent circle when active)
-- **Collapse** — left chevron shrinks the cluster to a single symbol; state persists
+- **Close** — a 20pt persistent grey circle (chevron.right) beside the pin; collapsing barely moves the mouse target
+- **Pin** — float above other windows (30pt accent circle when active; ⌘P)
+- **Collapsed form** — [‹ open chevron · a still-FUNCTIONAL always-circled pin]; zero ghost room; state persists
 
 ### Frosted Sidebar
 - `NavigationSplitView(.balanced)` with `.ultraThinMaterial`

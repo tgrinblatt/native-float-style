@@ -1,6 +1,6 @@
 ---
 name: native-float
-description: Build macOS Tahoe+ SwiftUI apps using Native Float — a style that feels like a real Apple app with Tyler's personal twist. Uses system fonts, native materials, Tahoe auto-glass on toolbar items, and minimal custom tokens (2 colors total). Identity comes from the HoverToggles cluster (appearance/opacity/pin as separate .primaryAction toolbar items) and the frosted sidebar treatment (ultraThinMaterial extending into title bar, capsule search, traffic lights on sidebar, inline title row with gear). Use when building native macOS utilities, creating window-managed apps with pin/float/opacity controls, or when the user asks for "Native Float", "Apple-native style", "Quick Copy style", or "HoverToggle pattern".
+description: Build macOS Tahoe+ SwiftUI apps using Native Float — a style that feels like a real Apple app with Tyler's personal twist. Uses system fonts, native materials, Tahoe auto-glass on toolbar items, and minimal custom tokens (2 colors total). Identity comes from the HoverToggles cluster (ONE cohesive collapsible toolbar item — magnet/appearance/opacity/pin) and the frosted sidebar treatment (ultraThinMaterial extending into title bar, capsule search, traffic lights on sidebar, inline title row with gear). Use when building native macOS utilities, creating window-managed apps with pin/float/opacity controls, or when the user asks for "Native Float", "Apple-native style", "Quick Copy style", or "HoverToggle pattern".
 ---
 
 # Native Float
@@ -67,7 +67,7 @@ enum NativeFloatTokens {
 
 ## Identity Mark 1: HoverToggles Cluster
 
-**Standard v2:** ONE `ToolbarItem` containing ONE HStack (`HoverTogglesCluster`) — appearance · opacity · magnet · pin, collapsible to a single symbol. NEVER separate items, `ToolbarItemGroup`, or `ControlGroup` (macOS 26's NSToolbar layout tears those apart). Full spec + complete code: `references/hover-toggles.md`.
+**Standard v3 (2026-06-12; source of truth: the Kaddy app):** ONE `ToolbarItem` containing ONE HStack (`HoverTogglesCluster`) — **magnet · appearance · opacity (a tight 2pt trio) · close › · pin**, collapsible to **[‹ open · a still-FUNCTIONAL pin]** (the most-used toggle stays one click and ⌘P away; the old passive collapsed symbol is retired). NEVER separate items, `ToolbarItemGroup`, or `ControlGroup` (macOS 26's NSToolbar layout tears those apart — the architecture rule since v2). Full spec + complete code: `references/hover-toggles.md`.
 
 ```swift
 ToolbarItem(id: "hoverToggles", placement: .primaryAction) {
@@ -76,9 +76,9 @@ ToolbarItem(id: "hoverToggles", placement: .primaryAction) {
 .customizationBehavior(.disabled)   // locked when the toolbar is customizable
 ```
 
-**Geometry (probe-measured):** the toolbar inflates default-styled buttons to 36×36 — the capsule interior. Every cluster control is a borderless button with a **30×30-framed label**, HStack spacing **4pt** → uniform **34pt** icon centers. Collapse chevron leads with 8pt padding; last control carries 4pt trailing padding.
+**Geometry (probe-measured):** the toolbar inflates default-styled buttons to 36×36 — the capsule interior. Every cluster control is a borderless button in a **30×30 rhythm cell**; cluster spacing **4pt**, tight-trio spacing **2pt**. Smaller visuals sit centered INSIDE their cell via a double frame: the magnet's active halo is **24pt translucent yellow** (glyph in ACCENT — the one deliberate accent-glyph exception), the close toggle's persistent grey circle is **20pt**. First/last controls carry 4pt edge padding; the collapsed chevron leads with 8pt. All dials in one `HoverToggleMetrics` enum.
 
-**On-states** use `HoverToggleStyle` — a 30pt accent circle (white glyph, 3pt gap from the glass), never full-bleed `.toggleStyle(.button)`:
+**On-states** use `HoverToggleStyle` — a 30pt accent circle (white glyph, 3pt gap from the glass), never full-bleed `.toggleStyle(.button)`. `.tint`, never `Color.accentColor` (ignores runtime tint); ABSOLUTE `Color.secondary` for neutral glyphs (hierarchical `.secondary` goes transparent-accent inside toolbar buttons):
 ```swift
 struct HoverToggleStyle: ToggleStyle {
     static let circleDiameter: CGFloat = 30
@@ -86,9 +86,9 @@ struct HoverToggleStyle: ToggleStyle {
         Button { configuration.isOn.toggle() } label: {
             configuration.label
                 .labelStyle(.iconOnly)
-                .foregroundStyle(configuration.isOn ? AnyShapeStyle(.white) : AnyShapeStyle(.secondary))
+                .foregroundStyle(configuration.isOn ? AnyShapeStyle(.white) : AnyShapeStyle(Color.secondary))
                 .frame(width: Self.circleDiameter, height: Self.circleDiameter)
-                .background(Circle().fill(configuration.isOn ? Color.accentColor : .clear))
+                .background(Circle().fill(configuration.isOn ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.clear)))
                 .contentShape(Circle())
         }
         .buttonStyle(.borderless)
@@ -96,7 +96,7 @@ struct HoverToggleStyle: ToggleStyle {
 }
 ```
 
-**The four controls:** appearance (filled icon reflects CURRENT state, ⇧⌘D) · opacity (icon-only button + popover: slider, presets 25/35/50/70/85/100) · magnet (follow across desktops via `collectionBehavior`; glyph is a template `NSImage` — no SF Symbol exists) · pin (`.floating` level, ⌘P).
+**The controls:** magnet (follow across desktops via `collectionBehavior`; glyph is a template `NSImage` — no SF Symbol exists; active = yellow halo + accent glyph) · appearance (filled icon reflects CURRENT state, ⇧⌘D) · opacity (icon-only button + popover: slider, presets 25/35/50/70/85/100) · close (20pt grey circle, chevron.right) · pin (`.floating` level, ⌘P, 30pt accent circle when on; the collapsed form's pin is ALWAYS circled — accent on / grey off). **Collapse is toolbar PRESSURE:** the flip changes toolbar content width with no window resize — wire the flag into any toolbar fit machinery as an input.
 
 **Collapsible:** a left chevron collapses the cluster to one grey capsule (`secondary.opacity(0.12)`, height 24) holding [expand chevron + app symbol]. State persists in UserDefaults; springs only.
 
@@ -174,7 +174,7 @@ WindowGroup { ContentView() }
 
 - Never use `.custom()` fonts
 - Never apply `.glassEffect()` manually
-- Never combine HoverToggles into one ToolbarItem
+- Never SPLIT the HoverToggles across separate ToolbarItems / groups — ONE item, ONE HStack (Standard v2+; the old v1 "separate items" rule is dead)
 - Never pass @Bindable to WindowAccessor (use primitive values)
 - Never use `.linear` or `.easeIn/.easeOut` (springs only)
 - Never add custom backgrounds to toolbar items

@@ -249,10 +249,10 @@ The sidebar's `.ultraThinMaterial` extends into the title bar zone automatically
 
 ## 9. HoverToggles Cluster
 
-The HoverToggles ARE the second identity mark. **Standard v2 (2026-06):** ONE cohesive, collapsible cluster in ONE toolbar item — appearance, opacity, magnet, pin. Full spec with complete code: `references/hover-toggles.md`.
+The HoverToggles ARE the second identity mark. **Standard v3 (2026-06-12; source of truth: the Kaddy app, beta-v0.1.2):** ONE cohesive, collapsible cluster in ONE toolbar item — **magnet · appearance · opacity (tight trio) · close › · pin**, collapsing to **[‹ open · a still-functional pin]**. Full spec with complete code: `references/hover-toggles.md`.
 
 ### Critical Rule
-The whole cluster is a single `ToolbarItem` whose content is one HStack (`HoverTogglesCluster`). Never separate items, never `ToolbarItemGroup`, never `ControlGroup` — macOS 26's NSToolbar layout distributes those apart and tears the cluster to pieces (proven in production, KeyDeck beta-v0.0.6). This reverses the v1 rule; the auto-grouping v1 relied on is not dependable once a window has a customizable toolbar.
+The whole cluster is a single `ToolbarItem` whose content is one HStack (`HoverTogglesCluster`). Never separate items, never `ToolbarItemGroup`, never `ControlGroup` — macOS 26's NSToolbar layout distributes those apart and tears the cluster to pieces (proven in production, KeyDeck beta-v0.0.6). This reversed the v1 rule; the auto-grouping v1 relied on is not dependable once a window has a customizable toolbar. (v3 keeps the architecture and redesigns the arrangement + state language.)
 
 ```swift
 ToolbarItem(id: "hoverToggles", placement: .primaryAction) {
@@ -263,19 +263,22 @@ ToolbarItem(id: "hoverToggles", placement: .primaryAction) {
 
 ### Geometry (probe-measured)
 The toolbar gives default-styled buttons 36×36 — the glass capsule's interior. Inside the cluster:
-- Every control: borderless button, label framed to **30×30** (a default-styled button inflates to 36 and breaks the rhythm)
-- HStack spacing **4pt** → uniform **34pt** icon centers
-- On-state: `HoverToggleStyle` — a **30pt accent circle** (white glyph), 3pt breathing room from the glass. Never the full-bleed `.toggleStyle(.button)`.
-- Collapse chevron leads with 8pt padding; the last control carries 4pt trailing padding (the capsule hugs content)
+- Every control: borderless button in a **30×30 rhythm cell** (a default-styled button inflates to 36 and breaks the rhythm)
+- Cluster spacing **4pt**; the magnet/appearance/opacity trio is TIGHT at **2pt**
+- Smaller visuals center inside their cell via a double frame: the magnet's active halo is **24pt translucent yellow** (glyph in ACCENT — the one deliberate accent-glyph exception), the close toggle's persistent grey circle is **20pt**
+- Pin on-state: `HoverToggleStyle` — a **30pt accent circle** (white glyph), 3pt breathing room from the glass; fill with `.tint`, never `Color.accentColor`. Never the full-bleed `.toggleStyle(.button)`.
+- First/last controls carry 4pt edge padding (the capsule hugs content); the collapsed chevron leads with 8pt
+- Every dial lives in one `HoverToggleMetrics` enum
 
-### The Four Controls
+### The Controls
+- **Magnet** — follow-across-desktops (`collectionBehavior`); no SF Symbol exists — template `NSImage` glyph; ACTIVE = the 24pt yellow halo + accent glyph (visually distinct from the pin's solid accent circle)
 - **Appearance** — filled icon reflects current state (`sun.max.fill` / `moon.fill`); ⇧⌘D
 - **Opacity** — icon-only button (`circle.fill` ≥0.95 / `circle.lefthalf.filled` ≥0.60 / `circle.dotted`); popover with labeled slider + presets `[0.25, 0.35, 0.50, 0.70, 0.85, 1.00]`
-- **Magnet** — follow-across-desktops (`collectionBehavior`); no SF Symbol exists — template `NSImage` glyph
-- **Pin** — `.floating` window level; ⌘P
+- **Close** — 20pt persistent grey circle, `chevron.right`, sitting beside the pin (collapsing barely moves the mouse target)
+- **Pin** — `.floating` window level; ⌘P; the collapsed form's pin is ALWAYS circled (accent on / grey off) and stays fully functional
 
 ### Collapsible
-A left-edge chevron collapses the cluster to one grey capsule (`Capsule().fill(.secondary.opacity(0.12))`, height 24) holding [expand chevron + the app's cluster symbol as a template `NSImage`]. State persists in UserDefaults; spring transitions only.
+The close toggle collapses the cluster to [‹ open chevron (no highlight, 8pt leading) · the always-circled FUNCTIONAL pin] — zero ghost room, and ⌘P keeps working. The old passive app-symbol chip is retired. State persists in UserDefaults; spring transitions only. **The flip is toolbar PRESSURE** — it changes toolbar content width with no window resize, so wire the collapsed flag into any toolbar fit machinery as an input.
 
 ---
 
@@ -325,13 +328,13 @@ WindowGroup {
 |------|-----------|---------|
 | Sidebar toggle | `.navigation` | Auto-inserted by NavigationSplitView |
 | App name | (in sidebar title row) | Not in toolbar — lives in sidebar content |
-| HoverToggles | `.primaryAction` (×3) | Appearance, Opacity, Pin |
+| HoverToggles | `.primaryAction` (×1) | ONE cluster item: magnet · appearance · opacity · close · pin |
 | Destructive actions | `.primaryAction` | Clear/delete menu (if applicable) |
 
 ### Rules
 - Don't add custom Capsule backgrounds — Tahoe handles glass wrapping
 - Don't use `.toolbar(.visible)` — let the system decide
-- Each HoverToggle is its own ToolbarItem
+- The HoverToggles are ONE ToolbarItem containing ONE HStack (Standard v2+ — never separate items)
 - Use `.help()` on every toolbar button for tooltip accessibility
 
 ---
